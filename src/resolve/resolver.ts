@@ -54,6 +54,8 @@ export type ResolvedOccurrence = {
   version: string;
   sourceId: string;
   integrity: string;
+  /** Credential-free registry origin (SPEC 8.1). */
+  origin: string;
   tarballUrl: string;
   bin: Record<string, string>;
   edges: ResolvedEdge[];
@@ -659,6 +661,7 @@ function toResolved(
     version: occ.version,
     sourceId: sourceIdForOccurrence(occ, origin),
     integrity: occ.integrity,
+    origin,
     tarballUrl: occ.entry.dist.tarball,
     bin: normalizeBin(occ.name, occ.entry.bin),
     edges,

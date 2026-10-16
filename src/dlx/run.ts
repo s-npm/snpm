@@ -21,7 +21,7 @@ import npa from "npm-package-arg";
 import * as os from "node:os";
 import * as path from "node:path";
 import { SnpmError } from "../errors.ts";
-import { fetchAndCommitSource } from "../fetch/package.ts";
+import { fetchSources } from "../fetch/all.ts";
 import type { RegistryClient } from "../fetch/registry.ts";
 import type { Logger } from "../log.ts";
 import { installProjection } from "../project/projection.ts";
@@ -114,18 +114,20 @@ export async function runDlx(options: DlxOptions): Promise<DlxResult> {
   const txn = await Transaction.begin(store, "dlx");
   try {
     await txn.setState("fetching");
-    const sorted = [...resolved.nodes].sort((a, b) =>
-      compareStrings(a.key, b.key),
-    );
-    for (const node of sorted) {
-      const committed = await fetchAndCommitSource({
-        store,
-        registry,
-        txn,
+    const fetched = await fetchSources({
+      store,
+      registry,
+      txn,
+      requests: resolved.nodes.map((node) => ({
+        key: node.key,
         name: node.name,
         version: node.version,
-        ...(options.logger === undefined ? {} : { logger: options.logger }),
-      });
+      })),
+      ...(options.logger === undefined ? {} : { logger: options.logger }),
+    });
+    for (const node of resolved.nodes) {
+      const committed = fetched.get(node.key);
+      if (committed === undefined) throw internal(`fetch lost ${node.key}`);
       if (committed.sourceId !== node.sourceId) {
         throw new SnpmError(
           "SNPM_INTERNAL",
@@ -380,10 +382,6 @@ async function runTool(
       resolve({ exitCode: closeCode(code, signal), stdout, stderr });
     });
   });
-}
-
-function compareStrings(a: string, b: string): number {
-  return a < b ? -1 : a > b ? 1 : 0;
 }
 
 function internal(message: string): SnpmError {

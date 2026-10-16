@@ -1,6 +1,6 @@
 {
   "name": "snpm",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "private": true,
   "description": "Storage-efficient Node package manager: one verified store per user, shared across projects through links.",
   "license": "MIT",
@@ -22,6 +22,8 @@
     "setup:hooks": "git config core.hooksPath .githooks"
   },
   "dependencies": {
+    "dotenv": "^8.2.0",
+    "node-fetch": "^3.3.2",
     "npm-package-arg": "^14.0.0",
     "npm-registry-fetch": "^20.0.1",
     "semver": "^7.8.5",
